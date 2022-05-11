@@ -46,15 +46,22 @@ void searcher_t::request_stop()
 	stop = true;
 }
 
-int searcher_t::quiesce(board_t& board, info_t& info, int alpha, int beta)
+bool searcher_t::should_stop(int64_t nodes)
 {
-	if (!infinite && info.nodes % 2048 == 0) {
-		if (tc_t::now() >= max_time)
+	if (!infinite) {
+		if (nodes % 2048 == 0 && tc_t::now() >= max_time)
 			request_stop();
 	}
 
-	if (stop)
+	return stop;
+}
+
+int searcher_t::quiesce(board_t& board, info_t& info, int alpha, int beta)
+{
+	if (should_stop(info.nodes))
 		return 0;
+
+	++info.nodes;
 
 	const int stand_pat = evaluate(board);
 
@@ -63,8 +70,6 @@ int searcher_t::quiesce(board_t& board, info_t& info, int alpha, int beta)
 
 	if (stand_pat > alpha)
 		alpha = stand_pat;
-
-	++info.nodes;
 
 	move_t move;
 	undo_t undo;
@@ -94,12 +99,7 @@ int searcher_t::quiesce(board_t& board, info_t& info, int alpha, int beta)
 
 int searcher_t::negamax(board_t& board, info_t& info, pv_t& pv, int alpha, int beta, int depth, int ply)
 {
-	if (!infinite && info.nodes % 2048 == 0) {
-		if (tc_t::now() >= max_time)
-			request_stop();
-	}
-
-	if (stop)
+	if (should_stop(info.nodes))
 		return 0;
 
 	if (depth <= 0)
