@@ -3,6 +3,7 @@
 #include "bitboard.h"
 #include "attacks.h"
 #include "util.h"
+#include "hash.h"
 
 bool board_t::is_square_attacked(int square, int color) const
 {
@@ -62,7 +63,7 @@ bool board_t::can_castle(int castling_right) const
 
 uint64_t board_t::ep_bb() const
 {
-	return (ep_square >= 0) ? (1ull << ep_square) : 0;
+	return ep_square > 0 ? (1ull << ep_square) : 0;
 }
 
 uint64_t board_t::occupancy() const
@@ -73,6 +74,22 @@ uint64_t board_t::occupancy() const
 uint64_t board_t::empty() const
 {
 	return ~occupancy();
+}
+
+uint64_t board_t::hash() const
+{
+	uint64_t key = 0;
+
+	for (int color = 0; color < 2; ++color)
+		for (int piece = 0; piece < 6; ++piece)
+			for (uint64_t b = colors[color] & pieces[piece]; b; b &= b - 1)
+				hash_piece(key, color, piece, std::countr_zero(b));
+
+	hash_turn(key, turn);
+	hash_castle(key, castle);
+	hash_ep_square(key, ep_square);
+
+	return key;
 }
 
 void board_t::parse_fen(const std::string& fen)

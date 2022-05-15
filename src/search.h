@@ -5,6 +5,7 @@
 #include <limits>
 #include <atomic>
 #include "board.h"
+#include "ttable.h"
 
 constexpr int max_ply = 256;
 constexpr int mate = std::numeric_limits<int>::max();
@@ -37,4 +38,6 @@ private:
 	tc_t::time_point max_time;
 	int max_depth;
 	bool infinite;
+	
+	ttable_t tt;
 };

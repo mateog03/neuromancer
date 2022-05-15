@@ -4,9 +4,10 @@
 #include "engine.h"
 #include "gen.h"
 #include "bitboard.h"
+#include "hash.h"
 
 constexpr auto name = "Neuromancer";
-constexpr auto version = "1.0";
+constexpr auto version = "1.1";
 constexpr auto startpos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 int64_t perft_impl(board_t& board, int depth)
@@ -29,6 +30,8 @@ int64_t perft_impl(board_t& board, int depth)
 
 engine_t::engine_t()
 {
+	init_keys();
+
 	board.parse_fen(startpos);
 }
 

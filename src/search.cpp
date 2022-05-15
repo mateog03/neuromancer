@@ -3,6 +3,26 @@
 #include "eval.h"
 #include "seq.h"
 
+int score_to_tt(int score, int ply)
+{
+	if (score >= min_mate)
+		score += ply;
+	else if (score <= -min_mate)
+		score -= ply;
+
+	return score;
+}
+
+int score_from_tt(int score, int ply)
+{
+	if (score >= min_mate)
+		score -= ply;
+	else if (score <= -min_mate)
+		score += ply;
+
+	return score;
+}
+
 void info_t::reset()
 {
 	start = tc_t::now();
@@ -107,13 +127,30 @@ int searcher_t::negamax(board_t& board, info_t& info, pv_t& pv, int alpha, int b
 
 	++info.nodes;
 
-	move_t pv_move = (ply == 0 && depth > 1) ? info.prev_best : move_t();
+	const uint64_t hash = board.hash();
+	const slot_t& s = tt.get(hash);
+
+	int score, move_count = 0, bound = upper_bound;
+
+	if (ply != 0 && s.hash == hash && s.depth >= depth) {
+		score = score_from_tt(s.score, ply);
+
+		if (s.bound <= exact_bound && score >= beta)
+			return beta;
+
+		if (s.bound >= exact_bound && score <= alpha)
+			return alpha;
+
+		if (s.bound == exact_bound && score > alpha && score < beta)
+			return score;
+	}
+
+	move_t pv_move = (ply == 0 && depth > 1) ? info.prev_best : s.move;
 	move_t move;
+	move_t best_move;
 	undo_t undo;
 	pv_t child_pv;
 	sequencer_t seq(board, pv_move);
-
-	int score, move_count = 0;
 
 	while (seq >> move) {
 		if (!board.play(move, undo)) {
@@ -134,11 +171,16 @@ int searcher_t::negamax(board_t& board, info_t& info, pv_t& pv, int alpha, int b
 
 		board.takeback(move, undo);
 
-		if (score >= beta)
+		if (score >= beta) {
+			tt.store(hash, move, score_to_tt(beta, ply), depth, lower_bound);
+
 			return beta;
+		}
 
 		if (score > alpha) {
 			alpha = score;
+			bound = exact_bound;
+			best_move = move;
 
 			pv = std::move(child_pv);
 			pv.insert(pv.begin(), move);
@@ -147,6 +189,8 @@ int searcher_t::negamax(board_t& board, info_t& info, pv_t& pv, int alpha, int b
 
 	if (move_count == 0)
 		return board.in_check() ? -mate + ply : 0;
+
+	tt.store(hash, best_move, score_to_tt(alpha, ply), depth, bound);
 
 	return alpha;
 }

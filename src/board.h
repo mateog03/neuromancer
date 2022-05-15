@@ -35,6 +35,7 @@ public:
 	uint64_t ep_bb() const;
 	uint64_t occupancy() const;
 	uint64_t empty() const;
+	uint64_t hash() const;
 
 	template<int...piece> uint64_t squares() const;
 	template<int...piece> uint64_t squares(int color) const;
