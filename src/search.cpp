@@ -59,6 +59,8 @@ void searcher_t::prepare(long msec, int depth)
 	max_time = tc_t::now() + std::chrono::milliseconds(msec);
 	max_depth = depth + 1;
 	infinite = msec == 0;
+	
+	tt.clear();
 }
 
 void searcher_t::request_stop()
