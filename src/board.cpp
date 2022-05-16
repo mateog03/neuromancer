@@ -76,6 +76,11 @@ uint64_t board_t::empty() const
 	return ~occupancy();
 }
 
+bool board_t::is_capture(move_t move)
+{
+	return occupancy() & (1ull << move.to());
+}
+
 uint64_t board_t::hash() const
 {
 	uint64_t key = 0;

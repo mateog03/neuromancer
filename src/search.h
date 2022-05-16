@@ -6,6 +6,7 @@
 #include <atomic>
 #include "board.h"
 #include "ttable.h"
+#include "history.h"
 
 constexpr int max_ply = 256;
 constexpr int mate = std::numeric_limits<int>::max();
@@ -40,4 +41,5 @@ private:
 	bool infinite;
 	
 	ttable_t tt;
+	history_t history;
 };

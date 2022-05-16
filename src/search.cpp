@@ -61,6 +61,7 @@ void searcher_t::prepare(long msec, int depth)
 	infinite = msec == 0;
 	
 	tt.clear();
+	history.clear();
 }
 
 void searcher_t::request_stop()
@@ -152,7 +153,7 @@ int searcher_t::negamax(board_t& board, info_t& info, pv_t& pv, int alpha, int b
 	move_t best_move;
 	undo_t undo;
 	pv_t child_pv;
-	sequencer_t seq(board, pv_move);
+	sequencer_t seq(board, pv_move, history);
 
 	while (seq >> move) {
 		if (!board.play(move, undo)) {
@@ -175,6 +176,9 @@ int searcher_t::negamax(board_t& board, info_t& info, pv_t& pv, int alpha, int b
 
 		if (score >= beta) {
 			tt.store(hash, move, score_to_tt(beta, ply), depth, lower_bound);
+
+			if (!board.is_capture(move))
+				history.add(board, move, depth);
 
 			return beta;
 		}

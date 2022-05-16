@@ -28,6 +28,8 @@ public:
 	bool play(move_t move, undo_t& undo);
 	void takeback(move_t move, const undo_t& undo);
 
+	bool is_capture(move_t move);
+
 	int piece_at(int square) const;
 	int stm() const;
 	bool can_castle(int castling_right) const;
