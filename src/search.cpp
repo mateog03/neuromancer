@@ -130,12 +130,15 @@ int searcher_t::negamax(board_t& board, info_t& info, pv_t& pv, int alpha, int b
 
 	++info.nodes;
 
+	const bool in_pv = alpha != beta - 1;
+	const bool in_root = ply == 0;
+
 	const uint64_t hash = board.hash();
 	const slot_t& s = tt.get(hash);
 
 	int score, move_count = 0, bound = upper_bound;
 
-	if (ply != 0 && s.hash == hash && s.depth >= depth) {
+	if (!in_root && !in_pv && s.hash == hash && s.depth >= depth) {
 		score = score_from_tt(s.score, ply);
 
 		if (s.bound <= exact_bound && score >= beta)
@@ -144,11 +147,11 @@ int searcher_t::negamax(board_t& board, info_t& info, pv_t& pv, int alpha, int b
 		if (s.bound >= exact_bound && score <= alpha)
 			return alpha;
 
-		if (s.bound == exact_bound && score > alpha && score < beta)
+		if (s.bound == exact_bound)
 			return score;
 	}
 
-	move_t pv_move = (ply == 0 && depth > 1) ? info.prev_best : s.move;
+	move_t pv_move = (in_root && depth > 1) ? info.prev_best : s.move;
 	move_t move;
 	move_t best_move;
 	undo_t undo;
