@@ -2,6 +2,7 @@
 #include "search.h"
 #include "eval.h"
 #include "seq.h"
+#include "bitboard.h"
 
 int score_to_tt(int score, int ply)
 {
@@ -120,7 +121,7 @@ int searcher_t::quiesce(board_t& board, info_t& info, int alpha, int beta)
 	return alpha;
 }
 
-int searcher_t::negamax(board_t& board, info_t& info, pv_t& pv, int alpha, int beta, int depth, int ply)
+int searcher_t::negamax(board_t& board, info_t& info, pv_t& pv, int alpha, int beta, int depth, int ply, bool do_null)
 {
 	if (should_stop(info.nodes))
 		return 0;
@@ -132,6 +133,7 @@ int searcher_t::negamax(board_t& board, info_t& info, pv_t& pv, int alpha, int b
 
 	const bool in_pv = alpha != beta - 1;
 	const bool in_root = ply == 0;
+	const bool in_check = board.in_check();
 
 	const uint64_t hash = board.hash();
 	const slot_t& s = tt.get(hash);
@@ -156,6 +158,21 @@ int searcher_t::negamax(board_t& board, info_t& info, pv_t& pv, int alpha, int b
 	move_t best_move;
 	undo_t undo;
 	pv_t child_pv;
+
+	if (do_null
+	&&  depth >= 3
+	&&  !(in_root || in_pv || in_check)
+	&&  board.squares<knight, bishop, rook, queen>(board.stm())) {
+		board.play_null(undo);
+
+		score = -negamax(board, info, child_pv, -beta, -beta + 1, depth - 3, ply + 1, false);
+
+		board.takeback_null(undo);
+
+		if (score >= beta)
+			return beta;
+	}
+
 	sequencer_t seq(board, pv_move, history);
 
 	while (seq >> move) {
@@ -167,12 +184,12 @@ int searcher_t::negamax(board_t& board, info_t& info, pv_t& pv, int alpha, int b
 		++move_count;
 
 		if (move_count == 1)
-			score = -negamax(board, info, child_pv, -beta, -alpha, depth - 1, ply + 1);
+			score = -negamax(board, info, child_pv, -beta, -alpha, depth - 1, ply + 1, true);
 		else {
-			score = -negamax(board, info, child_pv, -alpha - 1, -alpha, depth - 1, ply + 1);
+			score = -negamax(board, info, child_pv, -alpha - 1, -alpha, depth - 1, ply + 1, true);
 
 			if (score > alpha && score < beta)
-				score = -negamax(board, info, child_pv, -beta, -alpha, depth - 1, ply + 1);
+				score = -negamax(board, info, child_pv, -beta, -alpha, depth - 1, ply + 1, true);
 		}
 
 		board.takeback(move, undo);
@@ -213,7 +230,7 @@ void searcher_t::think(board_t& board)
 	for (int depth = 1; depth < max_depth; ++depth) {
 		info.reset();
 
-		score = negamax(board, info, pv, -mate, mate, depth, 0);
+		score = negamax(board, info, pv, -mate, mate, depth, 0, true);
 
 		if (stop)
 			break;

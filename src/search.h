@@ -30,7 +30,7 @@ public:
 	void request_stop();
 	bool should_stop(int64_t nodes);
 
-	int negamax(board_t& board, info_t& info, pv_t& pv, int alpha, int beta, int depth, int ply);
+	int negamax(board_t& board, info_t& info, pv_t& pv, int alpha, int beta, int depth, int ply, bool do_null);
 	int quiesce(board_t& board, info_t& info, int alpha, int beta);
 	void think(board_t& board);
 
