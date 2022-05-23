@@ -214,7 +214,7 @@ int searcher_t::negamax(board_t& board, info_t& info, pv_t& pv, int alpha, int b
 	}
 
 	if (move_count == 0)
-		return board.in_check() ? -mate + ply : 0;
+		return in_check ? -mate + ply : 0;
 
 	tt.store(hash, best_move, score_to_tt(alpha, ply), depth, bound);
 
