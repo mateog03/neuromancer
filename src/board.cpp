@@ -228,3 +228,16 @@ void board_t::takeback(move_t move, const undo_t& undo)
 
 	execute(move, turn, mpiece, cpiece);
 }
+
+void board_t::play_null(undo_t& undo)
+{
+	undo.ep_square = ep_square;
+	ep_square = -1;
+	turn = !turn;
+}
+
+void board_t::takeback_null(const undo_t& undo)
+{
+	ep_square = undo.ep_square;
+	turn = !turn;
+}

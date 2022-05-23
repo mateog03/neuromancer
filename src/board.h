@@ -28,6 +28,9 @@ public:
 	bool play(move_t move, undo_t& undo);
 	void takeback(move_t move, const undo_t& undo);
 
+	void play_null(undo_t& undo);
+	void takeback_null(const undo_t& undo);
+
 	bool is_capture(move_t move);
 
 	int piece_at(int square) const;
