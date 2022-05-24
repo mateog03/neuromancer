@@ -126,14 +126,17 @@ int searcher_t::negamax(board_t& board, info_t& info, pv_t& pv, int alpha, int b
 	if (should_stop(info.nodes))
 		return 0;
 
+	const bool in_pv = alpha != beta - 1;
+	const bool in_root = ply == 0;
+	const bool in_check = board.in_check();
+
+	if (in_check)
+		++depth;
+
 	if (depth <= 0)
 		return quiesce(board, info, alpha, beta);
 
 	++info.nodes;
-
-	const bool in_pv = alpha != beta - 1;
-	const bool in_root = ply == 0;
-	const bool in_check = board.in_check();
 
 	const uint64_t hash = board.hash();
 	const slot_t& s = tt.get(hash);
