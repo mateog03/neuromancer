@@ -7,7 +7,7 @@
 #include "hash.h"
 
 constexpr auto name = "Neuromancer";
-constexpr auto version = "1.2";
+constexpr auto version = "1.3";
 constexpr auto startpos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 int64_t perft_impl(board_t& board, int depth)
